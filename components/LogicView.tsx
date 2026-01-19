@@ -23,23 +23,27 @@ graph TD
     end
 
     %% === Orchestration Layer ===
-    subgraph Workflow [Orchestration Flow]
+    subgraph Workflow [Parallel Orchestration Flow]
         Start((Start))
         
-        %% Step 1: Routing
-        Start --> RouterCall{"RouterAgent: Need Search?"}
+        %% PARALLEL EXECUTION BLOCK
+        Start --> Fork{Parallel Execution}
         
-        %% Step 2: Context Gathering
-        RouterCall -- "Yes (Complex)" --> SearchCtx["ContextAgent: Generate w/ Google Search"]
-        RouterCall -- "No (Generic)" --> InternalCtx["ContextAgent: Generate w/ Internal Knowledge"]
+        %% Branch A: Context
+        Fork --> |Branch A| RouterCall{"RouterAgent: Need Search?"}
+        RouterCall -- "Yes" --> SearchCtx["ContextAgent: Search"]
+        RouterCall -- "No" --> InternalCtx["ContextAgent: Knowledge"]
         
-        %% Parallel: Extraction
-        Start -.-> ExtractorCall["ExtractionAgent: Extract Product Data"]
+        %% Branch B: Extraction
+        Fork --> |Branch B| ExtractorCall["ExtractionAgent: Extract URL"]
         
-        %% Step 3: Analysis
-        SearchCtx --> AnalysisStep
-        InternalCtx --> AnalysisStep
-        ExtractorCall -.-> AnalysisStep
+        %% MERGE
+        SearchCtx --> Join{Merge Data}
+        InternalCtx --> Join
+        ExtractorCall --> Join
+        
+        %% SEQUENTIAL
+        Join --> AnalysisStep
         
         AnalysisStep["AnalysisAgent: Evaluate Relevance (CoT)"]
         
@@ -85,8 +89,8 @@ graph TD
         </h2>
         <p className="text-slate-600 leading-relaxed text-lg">
           This application implements Google's <strong>Agent Development Kit (ADK)</strong> principles. 
-          It utilizes a standardized <code>BaseAgent</code> class for shared capabilities (auth, cost tracking) 
-          and specialized agents for distinct tasks, orchestrated by a central service.
+          It utilizes a standardized <code>BaseAgent</code> class for shared capabilities and uses 
+          <strong>Parallel Workflows</strong> to execute Context Gathering and Product Extraction simultaneously.
         </p>
       </div>
 
@@ -136,7 +140,7 @@ graph TD
           </div>
           <p className="text-xs text-slate-500 font-mono mb-2">extends BaseAgent</p>
           <p className="text-slate-600 text-sm flex-grow">
-            Parses raw URLs into structured JSON schemas using search-augmented extraction.
+            Runs in <strong>Parallel</strong>. Parses raw URLs into structured JSON schemas using search-augmented extraction.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-600">
             Output: Structured JSON

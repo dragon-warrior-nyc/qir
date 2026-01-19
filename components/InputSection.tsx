@@ -8,7 +8,7 @@ interface InputSectionProps {
   setQuery: (q: string) => void;
   product: ProductDetails;
   setProduct: (p: ProductDetails) => void;
-  onAnalyze: (productOverride?: ProductDetails) => void;
+  onAnalyze: (productOverride?: ProductDetails, urlToExtract?: string) => void;
   onStop: () => void;
   isAnalyzing: boolean;
   useSmartRouter: boolean;
@@ -26,7 +26,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
   useSmartRouter,
   setUseSmartRouter
 }) => {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState('https://www.walmart.com/ip/Lawry-s-Herb-Garlic-With-Lemon-Marinade-12-fl-oz-Bottle/10319655');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
 
@@ -35,6 +35,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
     setProduct({ ...product, [name]: value });
   };
 
+  // Standalone extraction (Just fill the form)
   const handleExtract = async () => {
     if (!url.trim()) return;
     
@@ -42,7 +43,8 @@ export const InputSection: React.FC<InputSectionProps> = ({
     setExtractionError(null);
     
     try {
-      const details = await extractProductDetailsFromUrl(url);
+      // Pass query if available to allow for task-specific extraction
+      const details = await extractProductDetailsFromUrl(url, query);
       setProduct(details);
     } catch (err: any) {
       setExtractionError(err.message || "Could not extract details automatically. Please enter manually.");
@@ -51,6 +53,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
     }
   };
 
+  // Parallel Workflow Trigger
   const handleExtractAndAnalyze = async () => {
     if (!url.trim()) return;
     if (!query.trim()) {
@@ -58,24 +61,9 @@ export const InputSection: React.FC<InputSectionProps> = ({
       return;
     }
 
-    setIsExtracting(true);
     setExtractionError(null);
-
-    try {
-      // 1. Extract Details
-      const details = await extractProductDetailsFromUrl(url);
-      
-      // 2. Update UI State
-      setProduct(details);
-
-      // 3. Trigger Analysis Immediately (passing the fresh details directly)
-      setIsExtracting(false); // Stop extracting spinner so Analyze spinner can take over in App
-      await onAnalyze(details);
-
-    } catch (err: any) {
-      setExtractionError(err.message || "Auto-fill & Analyze failed.");
-      setIsExtracting(false);
-    }
+    // We pass the URL to onAnalyze so App.tsx can run extraction in parallel with the Router/Context flow
+    onAnalyze(undefined, url);
   };
 
   return (
@@ -178,7 +166,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
                 }`}
                 title={!query ? "Enter query first" : "Extract details and run analysis immediately"}
               >
-                 {(isExtracting || isAnalyzing) && url && query ? (
+                 {(isAnalyzing) && url && query ? (
                    <>
                      <Loader2 className="w-4 h-4 animate-spin" />
                      Processing...

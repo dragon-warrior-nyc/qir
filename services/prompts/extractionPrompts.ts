@@ -1,5 +1,9 @@
-export const getExtractionPrompt = (url: string) => `
-I need to extract product details for an e-commerce item.
+export const getExtractionPrompt = (url: string, query?: string) => {
+  const contextInstruction = query 
+    ? `You are an e-commerce search relevancy evaluator. You are tasked to evaluate the search relevancy between the search query "${query}" and this product. Please extract product information that is helpful for the downstream evaluation task.`
+    : `I need to extract product details for an e-commerce item.`;
+
+  return `${contextInstruction}
 
 Here is the link provided: "${url}"
 
@@ -25,3 +29,4 @@ Required JSON Structure:
 
 If you cannot find the specific product, try to infer the category and brand from the URL itself, or return empty strings for unknown fields.
 `;
+}

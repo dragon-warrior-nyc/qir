@@ -11,6 +11,66 @@ import { ProductDetails, SearchContextResult, AnalysisResult } from "../types";
 
 // --- Orchestration Methods ---
 
+export interface WorkflowResult {
+  contextResult: SearchContextResult;
+  productResult: ProductDetails;
+  analysisResult: AnalysisResult;
+}
+
+/**
+ * Executes the ADK Parallel Workflow:
+ * 1. Parallel Branch A: Router -> Context Agent
+ * 2. Parallel Branch B: Extraction Agent (if URL provided)
+ * 3. Merge: Combine Context + Product Data
+ * 4. Sequential: Analysis Agent
+ */
+export const orchestrateParallelWorkflow = async (
+  query: string,
+  url: string | null,
+  currentProduct: ProductDetails,
+  useSmartRouter: boolean,
+  signal?: AbortSignal
+): Promise<WorkflowResult> => {
+  
+  // --- Parallel Execution Block ---
+  
+  // Branch A: Context Gathering (Router + Search/Knowledge)
+  const contextPromise = getSearchQueryContext(query, !useSmartRouter, signal);
+
+  // Branch B: Product Extraction (only if URL provided)
+  // Passing query to allow task-specific extraction focus
+  const extractionPromise = url 
+    ? extractProductDetailsFromUrl(url, query, signal)
+    : Promise.resolve(null);
+
+  // Await both branches simultaneously
+  const [contextResult, extractedProduct] = await Promise.all([
+    contextPromise,
+    extractionPromise
+  ]);
+
+  if (signal?.aborted) throw new Error('Aborted');
+
+  // --- Merge & Sequential Execution ---
+
+  // Decide which product data to use (Extracted > Manual/Current)
+  const finalProduct = extractedProduct || currentProduct;
+
+  // Final Step: Deep Analysis
+  const analysisResult = await analyzeProductRelevance(
+    query, 
+    finalProduct, 
+    contextResult.overview, 
+    signal
+  );
+
+  return {
+    contextResult,
+    productResult: finalProduct,
+    analysisResult
+  };
+};
+
 export const getSearchQueryContext = async (
     query: string, 
     forceSearch: boolean = false,
@@ -49,9 +109,9 @@ export const getSearchQueryContext = async (
   return result;
 };
 
-export const extractProductDetailsFromUrl = async (url: string, signal?: AbortSignal): Promise<ProductDetails> => {
+export const extractProductDetailsFromUrl = async (url: string, query: string = '', signal?: AbortSignal): Promise<ProductDetails> => {
   const extractor = new ExtractionAgent();
-  return await extractor.extract(url, signal);
+  return await extractor.extract(url, query, signal);
 };
 
 export const analyzeProductRelevance = async (

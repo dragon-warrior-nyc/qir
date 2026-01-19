@@ -3,17 +3,18 @@ import { BaseAgent } from "../core/baseAgent";
 import { ProductDetails, AnalysisResult } from "../../types";
 import { getAnalysisPrompt } from "../prompts/analysisPrompts";
 
-const cache = new Map<string, AnalysisResult>();
-
 export class AnalysisAgent extends BaseAgent {
   constructor() {
     super({ model: 'gemini-3-pro-preview' });
   }
 
-  async analyze(query: string, product: ProductDetails, searchContext: string, signal?: AbortSignal): Promise<AnalysisResult> {
-    const cacheKey = JSON.stringify({ q: query.trim().toLowerCase(), p: product, c: searchContext });
-    if (cache.has(cacheKey) && !signal?.aborted) return cache.get(cacheKey)!;
-
+  async analyze(
+    query: string, 
+    product: ProductDetails, 
+    searchContext: string, 
+    signal?: AbortSignal
+  ): Promise<AnalysisResult> {
+    
     try {
       const prompt = getAnalysisPrompt(query, product, searchContext);
 
@@ -48,7 +49,6 @@ export class AnalysisAgent extends BaseAgent {
         }
       };
       
-      cache.set(cacheKey, result);
       return result;
 
     } catch (error) {

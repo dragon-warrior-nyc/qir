@@ -1,12 +1,18 @@
 import { ProductDetails } from "../../types";
 
-export const getAnalysisPrompt = (query: string, product: ProductDetails, searchContext: string) => `
+export const getAnalysisPrompt = (
+  query: string, 
+  product: ProductDetails, 
+  searchContext: string
+) => `
 You are an expert E-commerce Merchandiser and Search Analyst.
 
 Analyze the relevance of the following product for the specific customer search query: "${query}".
 
 IMPORTANT INSTRUCTION:
-Focus primarily on exactly what the customer typed as their primary intent. Do not "over-think" or assume the customer misspelled words unless it is a glaringly obvious error. Treat the specific keywords in the query as high-priority constraints.
+1. **Exact Match Priority**: Your primary source of truth is the explicit keywords in the user's query. You MUST honor the exact match between the query terms and the product attributes (e.g., Brand, Size, Color, Gender, Flavor).
+2. **Context as Reference Only**: The "User Intent Context" provided below is secondary. It is strictly for background understanding of broad categories. It must NEVER override a direct mismatch between the query text and product details.
+3. **No Spell Check Assumption**: Interpret the query exactly as written. Do not assume typos or attempt to correct the user's spelling.
 
 STRICT RELEVANCE GUIDELINE (Must follow exactly):
 Score the product based on the following criteria.
@@ -29,7 +35,7 @@ EVALUATION GUIDELINE FOR BUNDLES:
 To evaluate bundle relevance, first ensure the primary item matches the user's intent; if it does, the rating is determined by the nature of the secondary items. Assign a 4-Excellent if the additional items are essential for functionality (e.g., batteries), integrated features (e.g., built-in screen protectors), explicit "freebies," or naturally paired sets that rarely sell separately (e.g., a wand and tiara set). If the bundle includes the desired product but the secondary items are merely extra value-adds rather than essential or traditional pairings, assign a 3-Good.
 Analogy: Think of a bundle like a Value Meal at a restaurant. If you only wanted the burger, receiving the fries and a drink is still a "Good" result because you got what you wanted, even if you have to deal with the extra items. However, if the burger requires a wrapper to be edible, that wrapper isn't an "extra" item—it's a dependency, making the result "Excellent."
 
-User Intent Context (derived from Google Search):
+User Intent Context (Reference Only):
 "${searchContext}"
 
 Product Details:

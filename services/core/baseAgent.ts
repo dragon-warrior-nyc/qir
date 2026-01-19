@@ -61,7 +61,10 @@ export abstract class BaseAgent {
       const result = await this.ai.models.generateContent({
         model: this.modelName,
         contents,
-        config,
+        config: {
+          temperature: 0,
+          ...config
+        },
       });
       
       if (signal?.aborted) {

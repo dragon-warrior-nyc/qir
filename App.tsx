@@ -4,13 +4,13 @@ import { ResultCard } from './components/ResultCard';
 import { GroundingView } from './components/GroundingView';
 import { CostEstimate } from './components/CostEstimate';
 import { LogicView } from './components/LogicView';
-import { analyzeProductRelevance, getSearchQueryContext } from './services/geminiService';
+import { orchestrateParallelWorkflow } from './services/geminiService';
 import { ProductDetails, AnalysisResult, SearchContextResult, CostBreakdown } from './types';
 import { Sparkles, BarChart3, FileCode2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'analyzer' | 'logic'>('analyzer');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState('steak seasoning marinade');
   const [product, setProduct] = useState<ProductDetails>({
     name: '',
     description: '',
@@ -42,12 +42,11 @@ const App: React.FC = () => {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setIsAnalyzing(false);
-      // Optional: Don't set an error message, just return to idle or keep partial state
-      // But clearing state usually feels cleaner for a "Stop" action
     }
   };
 
-  const handleAnalyze = async (productOverride?: ProductDetails) => {
+  // Upgraded handler supports optional URL for parallel extraction
+  const handleAnalyze = async (productOverride?: ProductDetails, urlToExtract?: string) => {
     // 1. Cancel any existing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -65,43 +64,51 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      // Use the override product if provided (for Auto-fill & Analyze), otherwise use state
-      const productToAnalyze = productOverride || product;
+      // Determine what product data to start with (Override > Current State)
+      const initialProductState = productOverride || product;
 
-      // 1. Context Search
-      // Pass the negation of useSmartRouter as 'forceSearch'
-      const contextData = await getSearchQueryContext(query, !useSmartRouter, signal);
+      // 3. Execute Parallel Workflow
+      const { 
+        contextResult, 
+        productResult, 
+        analysisResult: finalAnalysis, 
+      } = await orchestrateParallelWorkflow(
+        query,
+        urlToExtract || null,
+        initialProductState,
+        useSmartRouter,
+        signal
+      );
       
       if (signal.aborted) return;
-      setSearchContext(contextData);
 
-      // 2. Product Analysis
-      const relevanceData = await analyzeProductRelevance(query, productToAnalyze, contextData.overview, signal);
-      
-      if (signal.aborted) return;
-      setAnalysisResult(relevanceData);
+      // 4. Update State with Results
+      setSearchContext(contextResult);
+      setProduct(productResult); // Update UI with extracted data if applicable
+      setAnalysisResult(finalAnalysis);
 
-      // Calculate Costs
-      const extractionCost = productToAnalyze._meta?.cost || 0;
-      const contextCost = contextData._meta?.cost || 0;
-      const analysisCost = relevanceData._meta?.cost || 0;
+      // 5. Calculate Costs
+      const extractionCost = productResult._meta?.cost || 0;
+      const contextCost = contextResult._meta?.cost || 0;
+      const analysisCost = finalAnalysis._meta?.cost || 0;
       
       setCostBreakdown({
         extractionCost,
         contextCost,
         analysisCost,
+        criticCost: 0, // Critic removed
         totalCost: extractionCost + contextCost + analysisCost
       });
       
     } catch (err: any) {
       if (err.name === 'AbortError' || err.message === 'Aborted') {
         console.log('Analysis stopped by user');
-        return; // Do not set error state
+        return; 
       }
       console.error(err);
       setError(err.message || "Analysis failed. Please try again later.");
     } finally {
-      // Only turn off loading if we haven't started a NEW request (race condition check)
+      // Only turn off loading if we haven't started a NEW request
       if (abortControllerRef.current === controller) {
         setIsAnalyzing(false);
         abortControllerRef.current = null;
@@ -212,7 +219,10 @@ const App: React.FC = () => {
                       {searchContext ? (
                           <p className="text-sm text-slate-500">Context Acquired. Evaluating Product Relevance...</p>
                       ) : (
-                          <p className="text-sm text-slate-500">Gathering Search Context & Intent...</p>
+                          <p className="text-sm text-slate-500">
+                             Running Parallel Agents: <br/>
+                             <span className="font-mono text-xs">Router → Context Agent</span> &amp; <span className="font-mono text-xs">Extraction Agent</span>
+                          </p>
                       )}
                    </div>
                  </div>

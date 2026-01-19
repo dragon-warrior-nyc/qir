@@ -9,12 +9,13 @@ export class ExtractionAgent extends BaseAgent {
     super({ model: 'gemini-3-flash-preview' });
   }
 
-  async extract(url: string, signal?: AbortSignal): Promise<ProductDetails> {
-    const cacheKey = url.trim();
+  async extract(url: string, query: string, signal?: AbortSignal): Promise<ProductDetails> {
+    // Cache key now includes query because extraction focus might change based on the evaluation task
+    const cacheKey = `${url.trim()}_${query.trim()}`;
     if (cache.has(cacheKey) && !signal?.aborted) return cache.get(cacheKey)!;
 
     try {
-      const prompt = getExtractionPrompt(url);
+      const prompt = getExtractionPrompt(url, query);
       
       const { response, cost } = await this.generate(prompt, {
         tools: [{ googleSearch: {} }],

@@ -58,5 +58,16 @@ export interface CostBreakdown {
   extractionCost: number;
   contextCost: number;
   analysisCost: number;
+  criticCost: number;
   totalCost: number;
+}
+
+export interface CriticEvaluation {
+  satisfactory: boolean;
+  scoreAdjustmentNeeded: boolean;
+  critique: string;
+  suggestions: string[];
+  _meta?: {
+    cost: number;
+  };
 }
