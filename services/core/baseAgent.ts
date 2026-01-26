@@ -63,6 +63,9 @@ export abstract class BaseAgent {
         contents,
         config: {
           temperature: 0,
+          topK: 1, // Enforce greedy decoding for determinism
+          topP: 0.95,
+          seed: 42, // Fixed seed for reproducibility
           ...config
         },
       });

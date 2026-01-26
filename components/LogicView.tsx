@@ -16,9 +16,9 @@ graph TD
 
     %% === Agent Layer ===
     subgraph Agents [Agent Implementation Layer]
-        Router["RouterAgent (Gemini 2.5 Flash)"]
-        Context["ContextAgent (Gemini 2.5 Flash + Tools)"]
-        Extractor["ExtractionAgent (Gemini 2.5 Flash + Tools)"]
+        Router["RouterAgent (Gemini 3 Flash)"]
+        Context["ContextAgent (Gemini 3 Flash + Search)"]
+        Extractor["ExtractionAgent (Gemini 3 Flash + Search)"]
         Analyzer["AnalysisAgent (Gemini 3 Pro + Thinking)"]
     end
 
@@ -109,7 +109,7 @@ graph TD
             Evaluates query complexity to determine if expensive tools (Search) are needed.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-blue-600">
-            Model: Gemini 2.5 Flash
+            Model: Gemini 3 Flash
           </div>
         </div>
 
@@ -126,7 +126,7 @@ graph TD
             Gathers intent data dynamically, switching between internal knowledge or external Search tools.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-purple-600">
-            Tool: Google Search
+            Model: Gemini 3 Flash + Search
           </div>
         </div>
 
@@ -143,7 +143,7 @@ graph TD
             Runs in <strong>Parallel</strong>. Parses raw URLs into structured JSON schemas using search-augmented extraction.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-600">
-            Output: Structured JSON
+            Model: Gemini 3 Flash + Search
           </div>
         </div>
 
@@ -160,7 +160,7 @@ graph TD
             The final judge. Uses deep reasoning ("Thinking Mode") to score relevance 0-100.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-indigo-600">
-            Model: Gemini 3 Pro
+            Model: Gemini 3 Pro (Thinking)
           </div>
         </div>
       </div>

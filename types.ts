@@ -71,3 +71,5 @@ export interface CriticEvaluation {
     cost: number;
   };
 }
+
+export type RouterMode = 'smart' | 'force-search' | 'force-knowledge';

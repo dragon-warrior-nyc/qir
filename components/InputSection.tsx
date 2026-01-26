@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ProductDetails } from '../types';
+import { ProductDetails, RouterMode } from '../types';
 import { extractProductDetailsFromUrl } from '../services/geminiService';
-import { Search, ShoppingBag, Tag, FileText, DollarSign, Link, ArrowDownCircle, Loader2, Layers, Palette, Ruler, User, Award, Zap, Sparkles, Square } from 'lucide-react';
+import { Search, ShoppingBag, Tag, FileText, DollarSign, Link, ArrowDownCircle, Loader2, Layers, Palette, Ruler, User, Award, Zap, Sparkles, Square, Globe, Brain } from 'lucide-react';
 
 interface InputSectionProps {
   query: string;
@@ -11,8 +11,8 @@ interface InputSectionProps {
   onAnalyze: (productOverride?: ProductDetails, urlToExtract?: string) => void;
   onStop: () => void;
   isAnalyzing: boolean;
-  useSmartRouter: boolean;
-  setUseSmartRouter: (val: boolean) => void;
+  routerMode: RouterMode;
+  setRouterMode: (mode: RouterMode) => void;
 }
 
 export const InputSection: React.FC<InputSectionProps> = ({
@@ -23,8 +23,8 @@ export const InputSection: React.FC<InputSectionProps> = ({
   onAnalyze,
   onStop,
   isAnalyzing,
-  useSmartRouter,
-  setUseSmartRouter
+  routerMode,
+  setRouterMode
 }) => {
   const [url, setUrl] = useState('https://www.walmart.com/ip/Lawry-s-Herb-Garlic-With-Lemon-Marinade-12-fl-oz-Bottle/10319655');
   const [isExtracting, setIsExtracting] = useState(false);
@@ -85,30 +85,56 @@ export const InputSection: React.FC<InputSectionProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-md ${useSmartRouter ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500'}`}>
-                <Zap className="w-4 h-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-slate-700">Smart Router Optimization</span>
-                <span className="text-xs text-slate-500">
-                  {useSmartRouter 
-                    ? "Skip Search for generic queries to save cost." 
-                    : "Always use Google Search Grounding (Higher cost)."}
-                </span>
-              </div>
-            </div>
-            <label className={`relative inline-flex items-center cursor-pointer ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}`}>
-              <input 
-                type="checkbox" 
-                checked={useSmartRouter} 
-                onChange={(e) => setUseSmartRouter(e.target.checked)} 
-                className="sr-only peer" 
+          <div className="space-y-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Context Strategy</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              
+              {/* Option 1: Smart Router */}
+              <button
+                onClick={() => setRouterMode('smart')}
                 disabled={isAnalyzing}
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </label>
+                className={`relative flex flex-col items-center p-3 rounded-lg border transition-all ${
+                  routerMode === 'smart' 
+                    ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-500/20' 
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                } ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Zap className={`w-5 h-5 mb-2 ${routerMode === 'smart' ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <span className={`text-xs font-semibold ${routerMode === 'smart' ? 'text-indigo-900' : 'text-slate-700'}`}>Smart Router</span>
+                <span className={`text-[10px] ${routerMode === 'smart' ? 'text-indigo-700' : 'text-slate-500'}`}>Balanced Cost</span>
+              </button>
+
+              {/* Option 2: Force Search */}
+              <button
+                onClick={() => setRouterMode('force-search')}
+                disabled={isAnalyzing}
+                className={`relative flex flex-col items-center p-3 rounded-lg border transition-all ${
+                  routerMode === 'force-search' 
+                    ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500/20' 
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                } ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Globe className={`w-5 h-5 mb-2 ${routerMode === 'force-search' ? 'text-blue-600' : 'text-slate-400'}`} />
+                <span className={`text-xs font-semibold ${routerMode === 'force-search' ? 'text-blue-900' : 'text-slate-700'}`}>Search Grounding</span>
+                <span className={`text-[10px] ${routerMode === 'force-search' ? 'text-blue-700' : 'text-slate-500'}`}>High Cost</span>
+              </button>
+
+              {/* Option 3: Force Knowledge */}
+              <button
+                onClick={() => setRouterMode('force-knowledge')}
+                disabled={isAnalyzing}
+                className={`relative flex flex-col items-center p-3 rounded-lg border transition-all ${
+                  routerMode === 'force-knowledge' 
+                    ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500/20' 
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                } ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Brain className={`w-5 h-5 mb-2 ${routerMode === 'force-knowledge' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <span className={`text-xs font-semibold ${routerMode === 'force-knowledge' ? 'text-emerald-900' : 'text-slate-700'}`}>Model Knowledge</span>
+                <span className={`text-[10px] ${routerMode === 'force-knowledge' ? 'text-emerald-700' : 'text-slate-500'}`}>Low Cost</span>
+              </button>
+
+            </div>
           </div>
         </div>
       </div>

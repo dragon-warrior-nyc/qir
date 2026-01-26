@@ -5,7 +5,7 @@ import { GroundingView } from './components/GroundingView';
 import { CostEstimate } from './components/CostEstimate';
 import { LogicView } from './components/LogicView';
 import { orchestrateParallelWorkflow } from './services/geminiService';
-import { ProductDetails, AnalysisResult, SearchContextResult, CostBreakdown } from './types';
+import { ProductDetails, AnalysisResult, SearchContextResult, CostBreakdown, RouterMode } from './types';
 import { Sparkles, BarChart3, FileCode2 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -23,8 +23,8 @@ const App: React.FC = () => {
     badge: '',
   });
 
-  // State to control LLM Router Optimization (default: true)
-  const [useSmartRouter, setUseSmartRouter] = useState(true);
+  // State to control LLM Router Strategy (default: smart)
+  const [routerMode, setRouterMode] = useState<RouterMode>('smart');
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -76,7 +76,7 @@ const App: React.FC = () => {
         query,
         urlToExtract || null,
         initialProductState,
-        useSmartRouter,
+        routerMode,
         signal
       );
       
@@ -175,8 +175,8 @@ const App: React.FC = () => {
                 onAnalyze={handleAnalyze}
                 onStop={handleStop}
                 isAnalyzing={isAnalyzing}
-                useSmartRouter={useSmartRouter}
-                setUseSmartRouter={setUseSmartRouter}
+                routerMode={routerMode}
+                setRouterMode={setRouterMode}
               />
               {costBreakdown && <CostEstimate breakdown={costBreakdown} />}
             </div>

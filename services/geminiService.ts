@@ -2,7 +2,7 @@ import { RouterAgent } from "./agents/routerAgent";
 import { ContextAgent } from "./agents/contextAgent";
 import { ExtractionAgent } from "./agents/extractionAgent";
 import { AnalysisAgent } from "./agents/analysisAgent";
-import { ProductDetails, SearchContextResult, AnalysisResult } from "../types";
+import { ProductDetails, SearchContextResult, AnalysisResult, RouterMode } from "../types";
 
 /**
  * Orchestrator Service
@@ -28,14 +28,14 @@ export const orchestrateParallelWorkflow = async (
   query: string,
   url: string | null,
   currentProduct: ProductDetails,
-  useSmartRouter: boolean,
+  routerMode: RouterMode,
   signal?: AbortSignal
 ): Promise<WorkflowResult> => {
   
   // --- Parallel Execution Block ---
   
   // Branch A: Context Gathering (Router + Search/Knowledge)
-  const contextPromise = getSearchQueryContext(query, !useSmartRouter, signal);
+  const contextPromise = getSearchQueryContext(query, routerMode, signal);
 
   // Branch B: Product Extraction (only if URL provided)
   // Passing query to allow task-specific extraction focus
@@ -73,7 +73,7 @@ export const orchestrateParallelWorkflow = async (
 
 export const getSearchQueryContext = async (
     query: string, 
-    forceSearch: boolean = false,
+    routerMode: RouterMode = 'smart',
     signal?: AbortSignal
 ): Promise<SearchContextResult> => {
   
@@ -81,19 +81,24 @@ export const getSearchQueryContext = async (
   const router = new RouterAgent();
   const contextAgent = new ContextAgent();
 
-  let needsSearch = forceSearch;
+  let needsSearch = false; // Default for 'force-knowledge'
   let routerCost = 0;
 
   if (signal?.aborted) throw new Error('Aborted');
 
-  // 2. Logic Flow
-  if (!forceSearch) {
+  // 2. Logic Flow based on Mode
+  if (routerMode === 'force-search') {
+      console.log(`[Orchestrator] Skipping Router: Forcing search.`);
+      needsSearch = true;
+  } else if (routerMode === 'force-knowledge') {
+      console.log(`[Orchestrator] Skipping Router: Forcing internal knowledge.`);
+      needsSearch = false;
+  } else {
+      // 'smart' mode
       const decision = await router.determineNecessity(query, signal);
       needsSearch = decision.needsSearch;
       routerCost = decision.cost;
       console.log(`[Orchestrator] Router Decision for "${query}": Search Needed = ${needsSearch}`);
-  } else {
-      console.log(`[Orchestrator] Skipping Router: Forcing search.`);
   }
 
   if (signal?.aborted) throw new Error('Aborted');

@@ -1,5 +1,5 @@
 {
   "name": "Project Golden",
-  "description": "An advanced analytics tool to evaluate the relevance and utility of products against search queries using Gemini 2.5 Flash and Gemini 3 Pro with Thinking Mode.",
+  "description": "An advanced analytics tool to evaluate the relevance and utility of products against search queries using Gemini 3 Flash and Gemini 3 Pro with Thinking Mode.",
   "requestFramePermissions": []
 }

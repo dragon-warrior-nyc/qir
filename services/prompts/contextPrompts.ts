@@ -10,11 +10,11 @@ Summarize the intent in 2-3 sentences.
 `;
 
 export const getKnowledgeIntentPrompt = (query: string) => `
-You are an e-commerce expert. The user has searched for: "${query}".
+You are an e-commerce expert. The shopping customer has searched for: "${query}".
 
-IMPORTANT: Assume there is no spell check issue. Interpret the query exactly as it is written.
+IMPORTANT: Assume there is no spell check issue. Interpret the query exactly as it is written. E.g., when the query "maggie", please do not interpret "maggi".
 
-Based on general knowledge, explain what customers are usually looking for when they search this.
-What are the typical key features, brands, or attributes associated with this product category?
+Based on general knowledge, explain what customers are looking for when search this. Please use explicit intent expressed from the searched query instead of implicitly inferred one. 
+
 Summarize the intent in 2-3 sentences.
 `;
