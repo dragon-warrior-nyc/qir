@@ -26,7 +26,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
   routerMode,
   setRouterMode
 }) => {
-  const [url, setUrl] = useState('https://www.walmart.com/ip/Lawry-s-Herb-Garlic-With-Lemon-Marinade-12-fl-oz-Bottle/10319655');
+  const [url, setUrl] = useState('https://www.walmart.com/ip/Maggie-DVD-Lions-Gate-Horror/44617745');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
 

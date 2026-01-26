@@ -10,7 +10,7 @@ import { Sparkles, BarChart3, FileCode2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'analyzer' | 'logic'>('analyzer');
-  const [query, setQuery] = useState('steak seasoning marinade');
+  const [query, setQuery] = useState('maggie');
   const [product, setProduct] = useState<ProductDetails>({
     name: '',
     description: '',
