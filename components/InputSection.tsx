@@ -89,7 +89,22 @@ export const InputSection: React.FC<InputSectionProps> = ({
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Context Strategy</span>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               
-              {/* Option 1: Smart Router */}
+              {/* Option 1: Force Knowledge (Low Cost) */}
+              <button
+                onClick={() => setRouterMode('force-knowledge')}
+                disabled={isAnalyzing}
+                className={`relative flex flex-col items-center p-3 rounded-lg border transition-all ${
+                  routerMode === 'force-knowledge' 
+                    ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500/20' 
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                } ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Brain className={`w-5 h-5 mb-2 ${routerMode === 'force-knowledge' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <span className={`text-xs font-semibold ${routerMode === 'force-knowledge' ? 'text-emerald-900' : 'text-slate-700'}`}>Model Knowledge</span>
+                <span className={`text-[10px] ${routerMode === 'force-knowledge' ? 'text-emerald-700' : 'text-slate-500'}`}>Low Cost</span>
+              </button>
+
+              {/* Option 2: Smart Router (Balanced Cost) */}
               <button
                 onClick={() => setRouterMode('smart')}
                 disabled={isAnalyzing}
@@ -104,7 +119,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
                 <span className={`text-[10px] ${routerMode === 'smart' ? 'text-indigo-700' : 'text-slate-500'}`}>Balanced Cost</span>
               </button>
 
-              {/* Option 2: Force Search */}
+              {/* Option 3: Force Search (High Cost) */}
               <button
                 onClick={() => setRouterMode('force-search')}
                 disabled={isAnalyzing}
@@ -117,21 +132,6 @@ export const InputSection: React.FC<InputSectionProps> = ({
                 <Globe className={`w-5 h-5 mb-2 ${routerMode === 'force-search' ? 'text-blue-600' : 'text-slate-400'}`} />
                 <span className={`text-xs font-semibold ${routerMode === 'force-search' ? 'text-blue-900' : 'text-slate-700'}`}>Search Grounding</span>
                 <span className={`text-[10px] ${routerMode === 'force-search' ? 'text-blue-700' : 'text-slate-500'}`}>High Cost</span>
-              </button>
-
-              {/* Option 3: Force Knowledge */}
-              <button
-                onClick={() => setRouterMode('force-knowledge')}
-                disabled={isAnalyzing}
-                className={`relative flex flex-col items-center p-3 rounded-lg border transition-all ${
-                  routerMode === 'force-knowledge' 
-                    ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500/20' 
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                } ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                <Brain className={`w-5 h-5 mb-2 ${routerMode === 'force-knowledge' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                <span className={`text-xs font-semibold ${routerMode === 'force-knowledge' ? 'text-emerald-900' : 'text-slate-700'}`}>Model Knowledge</span>
-                <span className={`text-[10px] ${routerMode === 'force-knowledge' ? 'text-emerald-700' : 'text-slate-500'}`}>Low Cost</span>
               </button>
 
             </div>

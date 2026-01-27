@@ -23,8 +23,8 @@ const App: React.FC = () => {
     badge: '',
   });
 
-  // State to control LLM Router Strategy (default: smart)
-  const [routerMode, setRouterMode] = useState<RouterMode>('smart');
+  // State to control LLM Router Strategy (default: force-knowledge)
+  const [routerMode, setRouterMode] = useState<RouterMode>('force-knowledge');
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);

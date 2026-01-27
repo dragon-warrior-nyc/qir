@@ -73,7 +73,7 @@ export const orchestrateParallelWorkflow = async (
 
 export const getSearchQueryContext = async (
     query: string, 
-    routerMode: RouterMode = 'smart',
+    routerMode: RouterMode = 'force-knowledge',
     signal?: AbortSignal
 ): Promise<SearchContextResult> => {
   
