@@ -1,3 +1,4 @@
+import { Type } from "@google/genai";
 import { BaseAgent } from "../core/baseAgent";
 import { SearchContextResult } from "../../types";
 import { getSearchIntentPrompt, getKnowledgeIntentPrompt } from "../prompts/contextPrompts";
@@ -18,17 +19,42 @@ export class ContextAgent extends BaseAgent {
         ? getSearchIntentPrompt(query)
         : getKnowledgeIntentPrompt(query);
 
-      const config = needsSearch ? { tools: [{ googleSearch: {} }] } : {};
+      const config = {
+        tools: needsSearch ? [{ googleSearch: {} }] : [],
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            category: { type: Type.STRING, enum: ["PRODUCT", "INFORMATIONAL", "NONSENSICAL"] },
+            overview: { type: Type.STRING }
+          },
+          required: ["category", "overview"]
+        }
+      };
 
       const { response, cost } = await this.generate(prompt, config, needsSearch, signal);
+      
+      let overview = "Could not retrieve context.";
+      let category: SearchContextResult['queryCategory'] = 'PRODUCT';
 
-      const overview = response.text || "Could not retrieve context.";
+      if (response.text) {
+          try {
+              const json = JSON.parse(response.text);
+              overview = json.overview;
+              category = json.category;
+          } catch (e) {
+              console.warn("Context Agent JSON parse error, falling back to raw text", e);
+              overview = response.text;
+          }
+      }
+
       const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
 
       const result: SearchContextResult = {
         overview,
         groundingChunks: groundingChunks as any[],
         source: needsSearch ? 'SEARCH' : 'KNOWLEDGE',
+        queryCategory: category,
         _meta: { cost }
       };
 
@@ -41,7 +67,8 @@ export class ContextAgent extends BaseAgent {
       return {
         overview: "Context search unavailable.",
         groundingChunks: [],
-        source: 'KNOWLEDGE'
+        source: 'KNOWLEDGE',
+        queryCategory: 'PRODUCT' // Default safe fallback
       };
     }
   }

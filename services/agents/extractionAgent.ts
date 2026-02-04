@@ -47,7 +47,6 @@ export class ExtractionAgent extends BaseAgent {
         size: rawDetails.size || '',
         color: rawDetails.color || '',
         gender: rawDetails.gender || '',
-        badge: rawDetails.badge || '', 
         _meta: { cost }
       };
       
@@ -63,7 +62,7 @@ export class ExtractionAgent extends BaseAgent {
 
   private getErrorDetails(cost: number): ProductDetails {
     return {
-      name: '', description: '', price: '', category: '', brand: '', size: '', color: '', gender: '', badge: '',
+      name: '', description: '', price: '', category: '', brand: '', size: '', color: '', gender: '',
       _meta: { cost }
     };
   }

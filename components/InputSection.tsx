@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ProductDetails, RouterMode } from '../types';
 import { extractProductDetailsFromUrl } from '../services/geminiService';
-import { Search, ShoppingBag, Tag, FileText, DollarSign, Link, ArrowDownCircle, Loader2, Layers, Palette, Ruler, User, Award, Zap, Sparkles, Square, Globe, Brain } from 'lucide-react';
+import { Search, ShoppingBag, Tag, FileText, DollarSign, Link, ArrowDownCircle, Loader2, Layers, Palette, Ruler, User, Zap, Sparkles, Square, Globe, Brain } from 'lucide-react';
 
 interface InputSectionProps {
   query: string;
@@ -257,7 +257,7 @@ export const InputSection: React.FC<InputSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1 flex items-center gap-1">
                 <DollarSign className="w-3 h-3" /> Price
@@ -283,20 +283,6 @@ export const InputSection: React.FC<InputSectionProps> = ({
                 onChange={handleChange}
                 disabled={isAnalyzing}
                 placeholder="e.g., Women"
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div className="col-span-2 md:col-span-1">
-              <label className="block text-sm font-medium text-slate-600 mb-1 flex items-center gap-1">
-                <Award className="w-3 h-3" /> Badge
-              </label>
-              <input
-                type="text"
-                name="badge"
-                value={product.badge}
-                onChange={handleChange}
-                disabled={isAnalyzing}
-                placeholder="e.g., Best Seller"
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>

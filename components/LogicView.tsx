@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrainCircuit, Zap, Globe, Cpu, GitBranch, Database, ChevronDown, ChevronUp, Layers, Code2 } from 'lucide-react';
+import { BrainCircuit, Zap, Globe, Cpu, GitBranch, Database, ChevronDown, ChevronUp, Layers, Code2, ShieldCheck, Link } from 'lucide-react';
 import mermaid from 'mermaid';
 
 export const LogicView: React.FC = () => {
@@ -20,34 +20,38 @@ graph TD
         Context["ContextAgent (Gemini 3 Flash + Search)"]
         Extractor["ExtractionAgent (Gemini 3 Flash + Search)"]
         Analyzer["AnalysisAgent (Gemini 3 Pro + Thinking)"]
+        QA["QAAgent (Gemini 3 Flash)"]
     end
 
     %% === Orchestration Layer ===
-    subgraph Workflow [Parallel Orchestration Flow]
+    subgraph Workflow [Smart Sequential Orchestration Flow]
         Start((Start))
         
-        %% PARALLEL EXECUTION BLOCK
-        Start --> Fork{Parallel Execution}
-        
-        %% Branch A: Context
-        Fork --> |Branch A| RouterCall{"RouterAgent: Need Search?"}
+        %% Step 1: Context
+        Start --> RouterCall{"RouterAgent: Need Search?"}
         RouterCall -- "Yes" --> SearchCtx["ContextAgent: Search"]
         RouterCall -- "No" --> InternalCtx["ContextAgent: Knowledge"]
         
-        %% Branch B: Extraction
-        Fork --> |Branch B| ExtractorCall["ExtractionAgent: Extract URL"]
+        SearchCtx --> CategoryCheck{"Is Product Query?"}
+        InternalCtx --> CategoryCheck
         
-        %% MERGE
-        SearchCtx --> Join{Merge Data}
-        InternalCtx --> Join
-        ExtractorCall --> Join
+        %% Step 2: Short Circuit
+        CategoryCheck -- "No (Info/Nonsense)" --> EarlyExit((Short Circuit))
         
-        %% SEQUENTIAL
-        Join --> AnalysisStep
+        %% Step 3: Conditional Extraction
+        CategoryCheck -- "Yes (Product)" --> ExtractionCheck{"Has URL?"}
         
-        AnalysisStep["AnalysisAgent: Evaluate Relevance (CoT)"]
+        ExtractionCheck -- "Yes" --> ExtractorCall["ExtractionAgent: Extract Data"]
+        ExtractionCheck -- "No" --> AnalysisStep
         
-        AnalysisStep --> Result((Final JSON))
+        ExtractorCall --> AnalysisStep
+        
+        %% Step 4: Analysis & QA
+        AnalysisStep["AnalysisAgent: Evaluate Relevance (Thinking Mode)"]
+        
+        AnalysisStep --> QAStep["QAAgent: Check for Ambiguity"]
+        
+        QAStep --> Result((Final JSON))
     end
     
     %% Inheritance Relationships
@@ -55,6 +59,7 @@ graph TD
     Context -- extends --> BaseAgent
     Extractor -- extends --> BaseAgent
     Analyzer -- extends --> BaseAgent
+    QA -- extends --> BaseAgent
 
     %% Styling
     classDef core fill:#eceff1,stroke:#455a64,stroke-width:2px;
@@ -62,7 +67,7 @@ graph TD
     classDef flow fill:#fff,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5;
     
     class BaseAgent core;
-    class Router,Context,Extractor,Analyzer agent;
+    class Router,Context,Extractor,Analyzer,QA agent;
 `;
 
   useEffect(() => {
@@ -90,12 +95,13 @@ graph TD
         <p className="text-slate-600 leading-relaxed text-lg">
           This application implements Google's <strong>Agent Development Kit (ADK)</strong> principles. 
           It utilizes a standardized <code>BaseAgent</code> class for shared capabilities and uses 
-          <strong>Parallel Workflows</strong> to execute Context Gathering and Product Extraction simultaneously.
+          <strong>Smart Sequential Workflows</strong>. If the Context Agent detects a non-product query (e.g., Informational), 
+          the workflow short-circuits, skipping costly Product Extraction and Analysis steps.
         </p>
       </div>
 
       {/* The Agents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* Router Agent */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
           <div className="flex items-center gap-2 mb-3">
@@ -132,15 +138,15 @@ graph TD
 
         {/* Extraction Agent */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
-           <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-              <Code2 className="w-5 h-5" />
+              <Link className="w-5 h-5" />
             </div>
             <h3 className="font-bold text-slate-800">Extraction Agent</h3>
           </div>
           <p className="text-xs text-slate-500 font-mono mb-2">extends BaseAgent</p>
           <p className="text-slate-600 text-sm flex-grow">
-            Runs in <strong>Parallel</strong>. Parses raw URLs into structured JSON schemas using search-augmented extraction.
+            Extracts structured product data from URLs using Search Grounding to enhance context.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-600">
             Model: Gemini 3 Flash + Search
@@ -161,6 +167,23 @@ graph TD
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-indigo-600">
             Model: Gemini 3 Pro (Thinking)
+          </div>
+        </div>
+
+         {/* QA Agent */}
+         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
+           <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-800">QA Agent</h3>
+          </div>
+          <p className="text-xs text-slate-500 font-mono mb-2">extends BaseAgent</p>
+          <p className="text-slate-600 text-sm flex-grow">
+            Reviews the Analyst's reasoning to determine if human intervention is required.
+          </p>
+          <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-amber-600">
+            Model: Gemini 3 Flash
           </div>
         </div>
       </div>

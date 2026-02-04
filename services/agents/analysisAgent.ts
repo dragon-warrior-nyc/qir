@@ -8,12 +8,14 @@ export class AnalysisAgent extends BaseAgent {
     super({ model: 'gemini-3-pro-preview' });
   }
 
+  // Returns Omit<AnalysisResult, 'humanReviewNeeded' | 'reviewReason'> efficiently, 
+  // but we return Partial<AnalysisResult> to keep it simple for the service layer
   async analyze(
     query: string, 
     product: ProductDetails, 
     searchContext: string, 
     signal?: AbortSignal
-  ): Promise<AnalysisResult> {
+  ): Promise<Partial<AnalysisResult>> {
     
     try {
       const prompt = getAnalysisPrompt(query, product, searchContext);
@@ -24,24 +26,36 @@ export class AnalysisAgent extends BaseAgent {
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            relevanceScore: { type: Type.NUMBER },
+            relevanceScore: { type: Type.STRING }, // Use STRING to support "N.A."
+            ratingLabel: { type: Type.STRING },
             reasoning: { type: Type.STRING },
             keyMatches: { type: Type.ARRAY, items: { type: Type.STRING } },
             missingFeatures: { type: Type.ARRAY, items: { type: Type.STRING } },
             customerUtilityAssessment: { type: Type.STRING },
-            humanReviewNeeded: { type: Type.BOOLEAN },
-            reviewReason: { type: Type.STRING },
           },
-          required: ["relevanceScore", "reasoning", "keyMatches", "missingFeatures", "customerUtilityAssessment", "humanReviewNeeded", "reviewReason"],
+          required: ["relevanceScore", "ratingLabel", "reasoning", "keyMatches", "missingFeatures", "customerUtilityAssessment"],
         },
       }, false, signal);
 
       const text = response.text;
       if (!text) throw new Error("No response text from Gemini.");
       
-      const result = JSON.parse(text) as AnalysisResult;
+      const result = JSON.parse(text);
       
-      result._meta = {
+      // Post-processing to convert numeric strings back to numbers if possible
+      let finalScore: number | string = "N.A.";
+      if (result.relevanceScore !== "N.A.") {
+          finalScore = Number(result.relevanceScore);
+          // Fallback if parsing fails for some reason
+          if (isNaN(finalScore)) finalScore = "N.A.";
+      }
+
+      const parsedResult: Partial<AnalysisResult> = {
+          ...result,
+          relevanceScore: finalScore
+      };
+      
+      parsedResult._meta = {
         cost,
         usage: {
           promptTokens: response.usageMetadata?.promptTokenCount || 0,
@@ -49,7 +63,7 @@ export class AnalysisAgent extends BaseAgent {
         }
       };
       
-      return result;
+      return parsedResult;
 
     } catch (error) {
       if ((error as Error).message === 'Aborted') throw error;

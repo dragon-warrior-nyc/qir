@@ -4,7 +4,7 @@ import { ResultCard } from './components/ResultCard';
 import { GroundingView } from './components/GroundingView';
 import { CostEstimate } from './components/CostEstimate';
 import { LogicView } from './components/LogicView';
-import { orchestrateParallelWorkflow } from './services/geminiService';
+import { orchestrateSmartWorkflow } from './services/geminiService';
 import { ProductDetails, AnalysisResult, SearchContextResult, CostBreakdown, RouterMode } from './types';
 import { Sparkles, BarChart3, FileCode2 } from 'lucide-react';
 
@@ -20,7 +20,6 @@ const App: React.FC = () => {
     size: '',
     color: '',
     gender: '',
-    badge: '',
   });
 
   // State to control LLM Router Strategy (default: force-knowledge)
@@ -67,12 +66,12 @@ const App: React.FC = () => {
       // Determine what product data to start with (Override > Current State)
       const initialProductState = productOverride || product;
 
-      // 3. Execute Parallel Workflow
+      // 3. Execute Smart Workflow
       const { 
         contextResult, 
         productResult, 
         analysisResult: finalAnalysis, 
-      } = await orchestrateParallelWorkflow(
+      } = await orchestrateSmartWorkflow(
         query,
         urlToExtract || null,
         initialProductState,
@@ -96,7 +95,6 @@ const App: React.FC = () => {
         extractionCost,
         contextCost,
         analysisCost,
-        criticCost: 0, // Critic removed
         totalCost: extractionCost + contextCost + analysisCost
       });
       
@@ -199,7 +197,7 @@ const App: React.FC = () => {
               )}
 
               {searchContext && (
-                  <GroundingView context={searchContext} />
+                  <GroundingView context={searchContext} routerMode={routerMode} />
               )}
 
               {analysisResult && (
@@ -220,8 +218,8 @@ const App: React.FC = () => {
                           <p className="text-sm text-slate-500">Context Acquired. Evaluating Product Relevance...</p>
                       ) : (
                           <p className="text-sm text-slate-500">
-                             Running Parallel Agents: <br/>
-                             <span className="font-mono text-xs">Router → Context Agent</span> &amp; <span className="font-mono text-xs">Extraction Agent</span>
+                             Starting Smart Workflow: <br/>
+                             <span className="font-mono text-xs">Router → Context Agent</span>
                           </p>
                       )}
                    </div>

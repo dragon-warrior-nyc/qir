@@ -2,6 +2,7 @@ import { RouterAgent } from "./agents/routerAgent";
 import { ContextAgent } from "./agents/contextAgent";
 import { ExtractionAgent } from "./agents/extractionAgent";
 import { AnalysisAgent } from "./agents/analysisAgent";
+import { QAAgent } from "./agents/qaAgent";
 import { ProductDetails, SearchContextResult, AnalysisResult, RouterMode } from "../types";
 
 /**
@@ -18,13 +19,13 @@ export interface WorkflowResult {
 }
 
 /**
- * Executes the ADK Parallel Workflow:
- * 1. Parallel Branch A: Router -> Context Agent
- * 2. Parallel Branch B: Extraction Agent (if URL provided)
- * 3. Merge: Combine Context + Product Data
- * 4. Sequential: Analysis Agent
+ * Executes the ADK Smart Workflow:
+ * 1. Step 1: Context Gathering (Router -> Context Agent)
+ * 2. Step 2: Guard Check. If "Informational" or "Nonsensical", return early.
+ * 3. Step 3: Extraction Agent (only if Product Query + URL provided)
+ * 4. Step 4: Analysis Agent -> QA Agent
  */
-export const orchestrateParallelWorkflow = async (
+export const orchestrateSmartWorkflow = async (
   query: string,
   url: string | null,
   currentProduct: ProductDetails,
@@ -32,31 +33,57 @@ export const orchestrateParallelWorkflow = async (
   signal?: AbortSignal
 ): Promise<WorkflowResult> => {
   
-  // --- Parallel Execution Block ---
-  
-  // Branch A: Context Gathering (Router + Search/Knowledge)
-  const contextPromise = getSearchQueryContext(query, routerMode, signal);
-
-  // Branch B: Product Extraction (only if URL provided)
-  // Passing query to allow task-specific extraction focus
-  const extractionPromise = url 
-    ? extractProductDetailsFromUrl(url, query, signal)
-    : Promise.resolve(null);
-
-  // Await both branches simultaneously
-  const [contextResult, extractedProduct] = await Promise.all([
-    contextPromise,
-    extractionPromise
-  ]);
+  // --- Step 1: Context Gathering ---
+  // Executed first to determine intent and validity.
+  const contextResult = await getSearchQueryContext(query, routerMode, signal);
 
   if (signal?.aborted) throw new Error('Aborted');
 
-  // --- Merge & Sequential Execution ---
+  // --- Step 2: FAST PATH CHECK ---
+  // If this is not a product query, we short-circuit immediately.
+  // This saves the cost of Extraction and Deep Analysis.
+  if (contextResult.queryCategory === 'INFORMATIONAL' || contextResult.queryCategory === 'NONSENSICAL') {
+    const isInfo = contextResult.queryCategory === 'INFORMATIONAL';
+    const reason = isInfo 
+        ? "Query is Informational. Rated 5-Informational (N.A.)." 
+        : "Query is Nonsensical. Rated 6-Nonsensical (N.A.).";
+    
+    console.log(`[Orchestrator] Short-circuiting: ${reason}`);
 
-  // Decide which product data to use (Extracted > Manual/Current)
+    return {
+        contextResult,
+        productResult: currentProduct, // No extraction performed
+        analysisResult: {
+            relevanceScore: "N.A.",
+            ratingLabel: isInfo ? "Informational" : "Nonsensical",
+            reasoning: `Context Agent classification: ${contextResult.queryCategory}. ${reason}`,
+            keyMatches: [],
+            missingFeatures: [],
+            customerUtilityAssessment: isInfo 
+                ? "The user is seeking information or policies rather than a specific product to purchase." 
+                : "The search query appears to be gibberish or has no semantic meaning.",
+            humanReviewNeeded: false,
+            _meta: {
+                cost: (contextResult._meta?.cost || 0) // Only context cost incurred
+            }
+        }
+    };
+  }
+
+  // --- Step 3: Product Extraction (Conditional) ---
+  // Only runs if it is a Product query AND a URL is provided.
+  let extractedProduct: ProductDetails | null = null;
+  
+  if (url) {
+    // We pass the query to help the extractor focus on relevant attributes
+    extractedProduct = await extractProductDetailsFromUrl(url, query, signal);
+  }
+
+  if (signal?.aborted) throw new Error('Aborted');
+
   const finalProduct = extractedProduct || currentProduct;
 
-  // Final Step: Deep Analysis
+  // --- Step 4: Deep Analysis + QA ---
   const analysisResult = await analyzeProductRelevance(
     query, 
     finalProduct, 
@@ -126,5 +153,33 @@ export const analyzeProductRelevance = async (
   signal?: AbortSignal
 ): Promise<AnalysisResult> => {
   const analyzer = new AnalysisAgent();
-  return await analyzer.analyze(query, product, searchContext, signal);
+  const qaAgent = new QAAgent();
+
+  // 1. Core Analysis (Thinking Model)
+  const coreAnalysis = await analyzer.analyze(query, product, searchContext, signal);
+
+  if (signal?.aborted) throw new Error('Aborted');
+
+  // 2. QA Check (Flash Model)
+  // We pass the reasoning and score from the core analysis
+  const qaResult = await qaAgent.assessQuality(
+    query,
+    product,
+    coreAnalysis,
+    searchContext,
+    signal
+  );
+
+  // 3. Merge Results & Costs
+  const totalCost = (coreAnalysis._meta?.cost || 0) + qaResult.cost;
+
+  return {
+    ...coreAnalysis as AnalysisResult,
+    humanReviewNeeded: qaResult.humanReviewNeeded,
+    reviewReason: qaResult.reviewReason,
+    _meta: {
+      ...coreAnalysis._meta,
+      cost: totalCost
+    }
+  };
 };

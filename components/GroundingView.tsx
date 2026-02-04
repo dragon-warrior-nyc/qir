@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { SearchContextResult } from '../types';
+import { SearchContextResult, RouterMode } from '../types';
 import { Globe, ExternalLink, Brain, ChevronDown, ChevronUp } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 interface GroundingViewProps {
   context: SearchContextResult | null;
+  routerMode: RouterMode;
 }
 
-export const GroundingView: React.FC<GroundingViewProps> = ({ context }) => {
+export const GroundingView: React.FC<GroundingViewProps> = ({ context, routerMode }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   if (!context) return null;
@@ -92,7 +93,7 @@ export const GroundingView: React.FC<GroundingViewProps> = ({ context }) => {
                 </div>
             )}
             
-            {!isSearch && (
+            {!isSearch && routerMode === 'smart' && (
                 <div className="text-xs text-slate-400 italic mt-2 pt-2 border-t border-slate-100">
                 * Router determined search was not required for this query.
                 </div>

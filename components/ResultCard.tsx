@@ -10,26 +10,34 @@ interface ResultCardProps {
 export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
   if (!result) return null;
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10b981'; // Emerald 500 (Excellent)
-    if (score >= 60) return '#84cc16'; // Lime 500 (Good)
-    if (score >= 40) return '#f59e0b'; // Amber 500 (Okay)
-    if (score >= 20) return '#f97316'; // Orange 500 (Bad)
+  const getScoreColor = (score: number | string) => {
+    if (score === 'N.A.') return '#94a3b8'; // Slate 400 for N.A.
+    
+    const val = Number(score);
+    if (val >= 80) return '#10b981'; // Emerald 500 (Excellent)
+    if (val >= 60) return '#84cc16'; // Lime 500 (Good)
+    if (val >= 40) return '#f59e0b'; // Amber 500 (Okay)
+    if (val >= 20) return '#f97316'; // Orange 500 (Bad)
     return '#ef4444'; // Red 500 (Embarrassing)
   };
 
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Okay';
-    if (score >= 20) return 'Bad';
+  const getScoreLabel = (score: number | string) => {
+    if (result.ratingLabel) return result.ratingLabel;
+
+    if (score === 'N.A.') return 'N.A.';
+
+    const val = Number(score);
+    if (val >= 80) return 'Excellent';
+    if (val >= 60) return 'Good';
+    if (val >= 40) return 'Okay';
+    if (val >= 20) return 'Bad';
     return 'Embarrassing';
   };
 
   const scoreData = [
     {
       name: 'Relevance',
-      value: result.relevanceScore,
+      value: result.relevanceScore === 'N.A.' ? 0 : result.relevanceScore,
       fill: getScoreColor(result.relevanceScore),
     },
   ];
@@ -87,7 +95,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-bold text-slate-800">{result.relevanceScore}</span>
             <span 
-              className="text-xs font-semibold uppercase tracking-wide mt-1"
+              className="text-xs font-semibold uppercase tracking-wide mt-1 text-center px-1"
               style={{ color: getScoreColor(result.relevanceScore) }}
             >
               {getScoreLabel(result.relevanceScore)}

@@ -7,7 +7,6 @@ export interface ProductDetails {
   size: string;
   color: string;
   gender: string;
-  badge: string;
   _meta?: {
     cost: number;
     tokens?: number;
@@ -15,7 +14,8 @@ export interface ProductDetails {
 }
 
 export interface AnalysisResult {
-  relevanceScore: number;
+  relevanceScore: number | string;
+  ratingLabel: string;
   reasoning: string;
   keyMatches: string[];
   missingFeatures: string[];
@@ -42,6 +42,7 @@ export interface SearchContextResult {
   overview: string;
   groundingChunks: GroundingChunk[];
   source?: 'SEARCH' | 'KNOWLEDGE';
+  queryCategory?: 'PRODUCT' | 'INFORMATIONAL' | 'NONSENSICAL';
   _meta?: {
     cost: number;
   };
@@ -58,18 +59,7 @@ export interface CostBreakdown {
   extractionCost: number;
   contextCost: number;
   analysisCost: number;
-  criticCost: number;
   totalCost: number;
-}
-
-export interface CriticEvaluation {
-  satisfactory: boolean;
-  scoreAdjustmentNeeded: boolean;
-  critique: string;
-  suggestions: string[];
-  _meta?: {
-    cost: number;
-  };
 }
 
 export type RouterMode = 'smart' | 'force-search' | 'force-knowledge';

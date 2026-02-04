@@ -23,8 +23,7 @@ Required JSON Structure:
   "brand": "string",
   "size": "string (comma separated)",
   "color": "string (comma separated)",
-  "gender": "string (Men, Women, etc)",
-  "badge": "string (optional, e.g. Best Seller)"
+  "gender": "string (Men, Women, etc)"
 }
 
 If you cannot find the specific product, try to infer the category and brand from the URL itself, or return empty strings for unknown fields.
