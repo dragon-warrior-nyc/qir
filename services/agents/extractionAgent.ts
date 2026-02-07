@@ -17,9 +17,9 @@ export class ExtractionAgent extends BaseAgent {
     try {
       const prompt = getExtractionPrompt(url, query);
       
-      const { response, cost } = await this.generate(prompt, {
-        tools: [{ googleSearch: {} }],
-      }, true, signal); // hasSearch = true
+      // REMOVED tools: [{ googleSearch: {} }]
+      // Changed hasSearch to false
+      const { response, cost } = await this.generate(prompt, {}, false, signal);
 
       let text = response.text;
 

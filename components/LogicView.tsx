@@ -18,7 +18,7 @@ graph TD
     subgraph Agents [Agent Implementation Layer]
         Router["RouterAgent (Gemini 3 Flash)"]
         Context["ContextAgent (Gemini 3 Flash + Search)"]
-        Extractor["ExtractionAgent (Gemini 3 Flash + Search)"]
+        Extractor["ExtractionAgent (Gemini 3 Flash)"]
         Analyzer["AnalysisAgent (Gemini 3 Pro + Thinking)"]
         QA["QAAgent (Gemini 3 Flash)"]
     end
@@ -146,10 +146,10 @@ graph TD
           </div>
           <p className="text-xs text-slate-500 font-mono mb-2">extends BaseAgent</p>
           <p className="text-slate-600 text-sm flex-grow">
-            Extracts structured product data from URLs using Search Grounding to enhance context.
+             Extracts structured product data by analyzing the URL pattern and using internal knowledge.
           </p>
           <div className="mt-3 pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-600">
-            Model: Gemini 3 Flash + Search
+            Model: Gemini 3 Flash
           </div>
         </div>
 

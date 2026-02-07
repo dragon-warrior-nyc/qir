@@ -7,12 +7,11 @@ export const getExtractionPrompt = (url: string, query?: string) => {
 
 Here is the link provided: "${url}"
 
-Please perform a Google Search for this URL or the product keywords contained within it to find the most accurate and up-to-date information.
-
 Task:
-1. Identify the product name, price, brand, and key attributes.
-2. Return the data strictly as a JSON object.
-3. Do NOT use markdown code blocks. Just the raw JSON string.
+1. Analyze the URL string itself to identify the product name, brand, category, and other attributes (e.g. look for the slug or ID).
+2. Use your internal knowledge base to fill in details if the product is recognizable from the URL (e.g. a known movie, book, or electronic device).
+3. Return the data strictly as a JSON object.
+4. Do NOT use markdown code blocks. Just the raw JSON string.
 
 Required JSON Structure:
 {
@@ -26,6 +25,6 @@ Required JSON Structure:
   "gender": "string (Men, Women, etc)"
 }
 
-If you cannot find the specific product, try to infer the category and brand from the URL itself, or return empty strings for unknown fields.
+If you cannot find the specific product details from the URL pattern, try to infer the category and brand at minimum. Return empty strings for unknown fields.
 `;
 }
